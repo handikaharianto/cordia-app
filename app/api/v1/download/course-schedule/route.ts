@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { parse } from "csv-parse/sync"
 import fs from "fs"
+import { parseDate } from "@/lib/date"
 
 export async function GET() {
   // const URL =
@@ -25,10 +26,16 @@ export async function GET() {
 
   const courseSchedules = records
     .filter((row: any) => {
-      const termYear = Number(row["Term Descr"].split(" ")[1])
-      const currentYear = new Date().getFullYear()
+      const buildingCode = row["Building Code"] as string
 
-      return termYear >= currentYear
+      const startDate = parseDate(row["Start Date (DD/MM/YYYY)"])
+      const endDate = parseDate(row["End Date (DD/MM/YYYY)"])
+      const currentDate = new Date()
+
+      const hasBuildingCode = buildingCode !== ""
+      const isWithinRange = currentDate >= startDate && currentDate <= endDate
+
+      return isWithinRange && hasBuildingCode
     })
     .map((row: any) => {
       return {
@@ -81,7 +88,7 @@ export async function GET() {
     })
 
   /**
-   * Seed the data into a database
+   * Seed data into a database
    */
 
   return NextResponse.json({
