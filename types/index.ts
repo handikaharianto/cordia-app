@@ -1,59 +1,58 @@
 export type CourseSchedule = {
-  courseId: string
-  termCode: string
-  termDescription: string
-  sessionCode: string
-  subject: string
-  catalogNumber: string
-  section: string
-  componentCode: string
-  componentDescription: string
-  classNumber: string
-  classAssociation: string
-  courseTitle: string
-  topicID: string
-  topicDescription: string
-  combinedSectionID: string
-  classStatus: string
-  locationCode: string
-  locationDescription: string
-  instructionModeCode: string
-  instructionModeDescription: string
-  meetingPatternNumber: string
-  roomCode: string
-  buildingCode: string
-  room: string
-  classStartTime: string
-  classEndTime: string
-  monday: string
-  tuesday: string
-  wednesday: string
-  thursday: string
-  friday: string
-  saturday: string
-  sunday: string
-  startDate: string
-  endDate: string
-  career: string
-  departmentCode: string
-  departmentDescription: string
-  facultyCode: string
-  facultyDescription: string
-  enrollmentCapacity: string
-  currentEnrollment: string
-  waitlistCapacity: string
-  currentWaitlistTotal: string
-  allSeatsReserved: string
+  "Course ID": string
+  "Term Code": string
+  "Term Descr": string
+  Session: string
+  Subject: string
+  "Catalog Nbr": string
+  Section: string
+  "Component Code": string
+  "Class Nbr": string
+  "Class Association": string
+  "Course Title": string
+  "Topic ID": string
+  "Topic Descr": string
+  "Combined Section ID": string
+  "Class Status": string
+  "Location Code": string
+  "Location Descr": string
+  "Instruction Mode code": string
+  "Instruction Mode Descr": string
+  "Meeting Pattern Nbr": string
+  "Room Code": string
+  "Building Code": string
+  Room: string
+  "Class Start Time": string
+  "Class End Time": string
+  Mon: string
+  Tues: string
+  Wed: string
+  Thurs: string
+  Fri: string
+  Sat: string
+  Sun: string
+  "Start Date (DD/MM/YYYY)": string
+  "End Date (DD/MM/YYYY)": string
+  Career: string
+  "Dept. Code": string
+  "Dept. Descr": string
+  "Faculty Code": string
+  "Faculty Descr": string
+  "Enrollment Capacity": string
+  "Current Enrollment": string
+  "Waitlist Capacity": string
+  "Current Waitlist Total": string
+  "Has some/all seats reserved?": string
 }
 
 export type Classroom = {
-  locationCode: string
-  locationDescription: string
-  roomCode: string
-  buildingCode: string
+  location_code: string
+  location_description: string
+  room_code: string
+  building_code: string
   room: string
-  classStartTime: string
-  classEndTime: string
+  class_start_time: string
+  class_end_time: string
   monday: string
   tuesday: string
   wednesday: string
@@ -61,8 +60,8 @@ export type Classroom = {
   friday: string
   saturday: string
   sunday: string
-  startDate: string
-  endDate: string
-  facultyCode: string
-  facultyDescription: string
+  start_date: string
+  end_date: string
+  faculty_code: string
+  faculty_description: string
 }
