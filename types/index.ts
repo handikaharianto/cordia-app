@@ -1,1 +1,68 @@
-export type CourseSchedule = {}
+export type CourseSchedule = {
+  courseId: string
+  termCode: string
+  termDescription: string
+  sessionCode: string
+  subject: string
+  catalogNumber: string
+  section: string
+  componentCode: string
+  componentDescription: string
+  classNumber: string
+  classAssociation: string
+  courseTitle: string
+  topicID: string
+  topicDescription: string
+  combinedSectionID: string
+  classStatus: string
+  locationCode: string
+  locationDescription: string
+  instructionModeCode: string
+  instructionModeDescription: string
+  meetingPatternNumber: string
+  roomCode: string
+  buildingCode: string
+  room: string
+  classStartTime: string
+  classEndTime: string
+  monday: string
+  tuesday: string
+  wednesday: string
+  thursday: string
+  friday: string
+  saturday: string
+  sunday: string
+  startDate: string
+  endDate: string
+  career: string
+  departmentCode: string
+  departmentDescription: string
+  facultyCode: string
+  facultyDescription: string
+  enrollmentCapacity: string
+  currentEnrollment: string
+  waitlistCapacity: string
+  currentWaitlistTotal: string
+  allSeatsReserved: string
+}
+
+export type Classroom = {
+  locationCode: string
+  locationDescription: string
+  roomCode: string
+  buildingCode: string
+  room: string
+  classStartTime: string
+  classEndTime: string
+  monday: string
+  tuesday: string
+  wednesday: string
+  thursday: string
+  friday: string
+  saturday: string
+  sunday: string
+  startDate: string
+  endDate: string
+  facultyCode: string
+  facultyDescription: string
+}

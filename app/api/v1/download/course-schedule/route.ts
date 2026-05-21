@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { parse } from "csv-parse/sync"
 import fs from "fs"
 import { parseDate } from "@/lib/date"
+import { formatDate, formatTime } from "@/lib/utils"
+import { Classroom, CourseSchedule } from "@/types"
 
 export async function GET() {
   // const URL =
@@ -22,14 +24,14 @@ export async function GET() {
     skip_empty_lines: true,
     trim: true,
     bom: true,
-  })
+  }) as CourseSchedule[]
 
-  const courseSchedules = records
-    .filter((row: any) => {
-      const buildingCode = row["Building Code"] as string
+  const classrooms = records
+    .filter((row) => {
+      const buildingCode = row.buildingCode as string
 
-      const startDate = parseDate(row["Start Date (DD/MM/YYYY)"])
-      const endDate = parseDate(row["End Date (DD/MM/YYYY)"])
+      const startDate = parseDate(row.startDate)
+      const endDate = parseDate(row.endDate)
       const currentDate = new Date()
 
       const hasBuildingCode = buildingCode !== ""
@@ -37,62 +39,35 @@ export async function GET() {
 
       return isWithinRange && hasBuildingCode
     })
-    .map((row: any) => {
+    .map((row) => {
       return {
-        courseId: row["Course ID"],
-        termCode: row["Term Code"],
-        termDescription: row["Term Descr"],
-        sessionCode: row["Session"],
-        subject: row["Subject"],
-        catalogNumber: row["Catalog Nbr"],
-        section: row["Section"],
-        componentCode: row["Component Code"],
-        componentDescription: row["Component Descr"],
-        classNumber: row["Class Nbr"],
-        classAssociation: row["Class Association"],
-        courseTitle: row["Course Title"],
-        topicID: row["Topic ID"],
-        topicDescription: row["Topic Descr"],
-        combinedSectionID: row["Combined Section ID"],
-        classStatus: row["Class Status"],
-        locationCode: row["Location Code"],
-        locationDescription: row["Location Descr"],
-        instructionModeCode: row["Instruction Mode code"],
-        instructionModeDescription: row["Instruction Mode Descr"],
-        meetingPatternNumber: row["Meeting Pattern Nbr"],
-        roomCode: row["Room Code"],
-        buildingCode: row["Building Code"],
-        room: row["Room"],
-        classStartTime: row["Class Start Time"],
-        classEndTime: row["Class End Time"],
-        monday: row["Mon"],
-        tuesday: row["Tues"],
-        wednesday: row["Wed"],
-        thursday: row["Thurs"],
-        friday: row["Fri"],
-        saturday: row["Sat"],
-        sunday: row["Sun"],
-        startDate: row["Start Date (DD/MM/YYYY)"],
-        endDate: row["End Date (DD/MM/YYYY)"],
-        career: row["Career"],
-        departmentCode: row["Dept. Code"],
-        departmentDescription: row["Dept. Descr"],
-        facultyCode: row["Faculty Code"],
-        facultyDescription: row["Faculty Descr"],
-        enrollmentCapacity: row["Enrollment Capacity"],
-        currentEnrollment: row["Current Enrollment"],
-        waitlistCapacity: row["Waitlist Capacity"],
-        currentWaitlistTotal: row["Current Waitlist Total"],
-        allSeatsReserved: row["Has some/all seats reserved?"],
+        locationCode: row.locationCode,
+        locationDescription: row.locationDescription,
+        roomCode: row.roomCode,
+        buildingCode: row.buildingCode,
+        room: row.room,
+        classStartTime: formatTime(row.classStartTime),
+        classEndTime: formatTime(row.classEndTime),
+        monday: row.monday,
+        tuesday: row.tuesday,
+        wednesday: row.wednesday,
+        thursday: row.thursday,
+        friday: row.friday,
+        saturday: row.saturday,
+        sunday: row.sunday,
+        startDate: formatDate(row.startDate),
+        endDate: formatDate(row.endDate),
+        facultyCode: row.facultyCode,
+        facultyDescription: row.facultyDescription,
       }
-    })
+    }) as Classroom[]
 
   /**
    * Seed data into a database
    */
 
   return NextResponse.json({
-    count: courseSchedules.length,
-    data: courseSchedules,
+    count: classrooms.length,
+    data: classrooms,
   })
 }
