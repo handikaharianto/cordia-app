@@ -2,6 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller, type Resolver } from "react-hook-form"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -23,6 +25,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { IconSearch } from "@tabler/icons-react"
 import { SimpleTimePicker } from "@/components/simple-time-picker"
+import { Building } from "@/types"
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
 
@@ -39,6 +42,7 @@ const formSchema = z
     timeFrom: z.date("Please select a start time"),
     timeTo: z.date("Please select an end time"),
     campus: z.string({ message: "Please select a campus" }),
+    building: z.string().optional(),
   })
   .refine((data) => data.timeFrom.getTime() < data.timeTo.getTime(), {
     message: "End time must be after start time",
@@ -47,20 +51,43 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>
 
-export default function ClassroomSearchForm() {
+type ClassroomSearchFormProps = {
+  buildings: Building[]
+}
+
+export default function ClassroomSearchForm({
+  buildings,
+}: ClassroomSearchFormProps) {
+  const router = useRouter()
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as Resolver<FormValues>,
     defaultValues: {
       day: undefined,
       timeFrom: new Date(),
       timeTo: new Date(new Date().getTime() + 60 * 60 * 1000),
-      campus: "",
+      campus: CAMPUS_OPTIONS[0].value,
     },
   })
 
   function onSubmit(values: FormValues) {
     console.log("Form submitted:", values)
   }
+
+  const campus = form.watch("campus")
+  const building = form.watch("building")
+  const day = form.watch("day")
+
+  // Update URL when form values change
+  useEffect(() => {
+    const params = new URLSearchParams()
+
+    if (campus) params.set("campus", campus)
+    if (building) params.set("building", building)
+    if (day) params.set("day", day)
+
+    router.push(`?${params.toString()}`, { scroll: false })
+  }, [building, campus, day, router, form])
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -87,6 +114,44 @@ export default function ClassroomSearchForm() {
                     {CAMPUS_OPTIONS.map((campus) => (
                       <SelectItem key={campus.value} value={campus.value}>
                         {campus.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          {/* Building */}
+          <Controller
+            name="building"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field orientation="vertical" className="max-w-md!">
+                <FieldLabel htmlFor="building">Building</FieldLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onOpenChange={(open) => {
+                    if (!open) field.onBlur()
+                  }}
+                >
+                  <SelectTrigger
+                    id="building"
+                    aria-invalid={fieldState.invalid}
+                  >
+                    <SelectValue placeholder="Select building (optional)" />
+                  </SelectTrigger>
+                  <SelectContent className="p-1.5">
+                    {buildings.map((building) => (
+                      <SelectItem
+                        key={building.building_code}
+                        value={building.building_code}
+                      >
+                        {building.building_code}
                       </SelectItem>
                     ))}
                   </SelectContent>

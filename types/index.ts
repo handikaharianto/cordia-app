@@ -65,3 +65,9 @@ export type Classroom = {
   faculty_code: string
   faculty_description: string
 }
+
+export type Building = {
+  id: string
+  building_code: string
+  location_code: string
+}
