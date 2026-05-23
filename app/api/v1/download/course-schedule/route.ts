@@ -14,13 +14,18 @@ const seedClassroomData = async (data: Classroom[]) => {
 }
 
 const seedBuildingCodeData = async (data: Classroom[]) => {
-  const uniqueBuildingCodes = [
-    ...new Set(data.map((classroom) => classroom.building_code)),
+  // Get unique building_code + location_code combinations
+  const buildingCodes = [
+    ...new Map(
+      data.map((classroom) => [
+        `${classroom.building_code}-${classroom.location_code}`,
+        {
+          building_code: classroom.building_code,
+          location_code: classroom.location_code,
+        },
+      ])
+    ).values(),
   ]
-
-  const buildingCodes = uniqueBuildingCodes.map((building_code) => ({
-    building_code,
-  }))
 
   const { error } = await supabase.from("buildings").insert(buildingCodes)
   if (error) throw error
