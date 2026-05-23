@@ -13,6 +13,19 @@ const seedClassroomData = async (data: Classroom[]) => {
   if (error) throw error
 }
 
+const seedBuildingCodeData = async (data: Classroom[]) => {
+  const uniqueBuildingCodes = [
+    ...new Set(data.map((classroom) => classroom.building_code)),
+  ]
+
+  const buildingCodes = uniqueBuildingCodes.map((building_code) => ({
+    building_code,
+  }))
+
+  const { error } = await supabase.from("buildings").insert(buildingCodes)
+  if (error) throw error
+}
+
 export async function GET() {
   // const URL =
   //   "https://opendata.concordia.ca/datasets/sis/CU_SR_OPEN_DATA_SCHED.csv"
@@ -84,8 +97,10 @@ export async function GET() {
     console.log(`Inserted ${insertedCount}/${classrooms.length} rows`)
   }
 
+  await seedBuildingCodeData(classrooms)
+
   return NextResponse.json({
     count: classrooms.length,
-    message: "Classroom data has been seeded successfully!",
+    message: "Data has been seeded successfully!",
   })
 }
