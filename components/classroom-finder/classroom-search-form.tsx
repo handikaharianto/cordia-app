@@ -67,6 +67,7 @@ export default function ClassroomSearchForm({
       timeFrom: new Date(),
       timeTo: new Date(new Date().getTime() + 60 * 60 * 1000),
       campus: CAMPUS_OPTIONS[0].value,
+      building: "",
     },
   })
 
@@ -77,6 +78,11 @@ export default function ClassroomSearchForm({
   const campus = form.watch("campus")
   const building = form.watch("building")
   const day = form.watch("day")
+
+  // Reset building when campus changes
+  useEffect(() => {
+    form.setValue("building", "")
+  }, [campus, form])
 
   // Update URL when form values change
   useEffect(() => {
@@ -133,7 +139,7 @@ export default function ClassroomSearchForm({
               <Field orientation="vertical" className="max-w-md!">
                 <FieldLabel htmlFor="building">Building</FieldLabel>
                 <Select
-                  value={field.value}
+                  value={field.value || ""}
                   onValueChange={field.onChange}
                   onOpenChange={(open) => {
                     if (!open) field.onBlur()
