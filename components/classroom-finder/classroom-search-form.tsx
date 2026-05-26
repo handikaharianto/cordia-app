@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller, type Resolver } from "react-hook-form"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -27,6 +27,19 @@ import { IconSearch } from "@tabler/icons-react"
 import { SimpleTimePicker } from "@/components/simple-time-picker"
 import { Building } from "@/types"
 
+function formatTime(date: Date): string {
+  return date.toTimeString().slice(0, 5) // e.g. "14:30"
+}
+
+/** Parse a "HH:mm" string into a Date (today with that time) */
+function parseTime(time: string): Date | null {
+  const match = time.match(/^(\d{2}):(\d{2})$/)
+  if (!match) return null
+  const d = new Date()
+  d.setHours(Number(match[1]), Number(match[2]), 0, 0)
+  return d
+}
+
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const
 
 const CAMPUS_OPTIONS = [
@@ -36,7 +49,7 @@ const CAMPUS_OPTIONS = [
 
 const formSchema = z
   .object({
-    day: z.enum(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], {
+    day: z.enum(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], {
       message: "Please select a day",
     }),
     timeFrom: z.date("Please select a start time"),
@@ -51,6 +64,16 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>
 
+const DAY_MAP: Record<number, FormValues["day"]> = {
+  0: "Sun",
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
+}
+
 type ClassroomSearchFormProps = {
   buildings: Building[]
 }
@@ -59,25 +82,49 @@ export default function ClassroomSearchForm({
   buildings,
 }: ClassroomSearchFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const defaultValues = useMemo<FormValues>(() => {
+    const now = new Date()
+
+    const paramDay = searchParams.get("day") as FormValues["day"] | null
+    const paramCampus = searchParams.get("campus")
+    const paramBuilding = searchParams.get("building")
+    const paramTimeFrom = searchParams.get("timeFrom")
+    const paramTimeTo = searchParams.get("timeTo")
+
+    const parsedTimeFrom = paramTimeFrom ? parseTime(paramTimeFrom) : null
+    const parsedTimeTo = paramTimeTo ? parseTime(paramTimeTo) : null
+
+    return {
+      day: paramDay ?? DAY_MAP[now.getDay()],
+      campus: paramCampus ?? CAMPUS_OPTIONS[0].value,
+      building: paramBuilding ?? "",
+      timeFrom: parsedTimeFrom ?? now,
+      timeTo: parsedTimeTo ?? new Date(now.getTime() + 60 * 60 * 1000),
+    }
+  }, [searchParams])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as Resolver<FormValues>,
-    defaultValues: {
-      day: undefined,
-      timeFrom: new Date(),
-      timeTo: new Date(new Date().getTime() + 60 * 60 * 1000),
-      campus: CAMPUS_OPTIONS[0].value,
-      building: "",
-    },
+    defaultValues,
   })
 
   function onSubmit(values: FormValues) {
-    console.log("Form submitted:", values)
+    const params = new URLSearchParams()
+
+    if (values.campus) params.set("campus", values.campus)
+    if (values.building) params.set("building", values.building)
+    if (values.day) params.set("day", values.day)
+    params.set("timeFrom", formatTime(values.timeFrom))
+    params.set("timeTo", formatTime(values.timeTo))
+
+    router.push(`?${params.toString()}`, { scroll: false })
   }
 
   const campus = form.watch("campus")
-  const building = form.watch("building")
-  const day = form.watch("day")
+  // const building = form.watch("building")
+  // const day = form.watch("day")
 
   // Reset building when campus changes
   useEffect(() => {
@@ -88,12 +135,18 @@ export default function ClassroomSearchForm({
   useEffect(() => {
     const params = new URLSearchParams()
 
-    if (campus) params.set("campus", campus)
-    if (building) params.set("building", building)
-    if (day) params.set("day", day)
+    const campusValue = form.getValues("campus")
+    const buildingValue = form.getValues("building")
+    const dayValue = form.getValues("day")
+
+    params.set("campus", campusValue)
+    if (buildingValue) params.set("building", buildingValue ?? "")
+    params.set("day", dayValue)
+    params.set("timeFrom", formatTime(form.getValues("timeFrom")))
+    params.set("timeTo", formatTime(form.getValues("timeTo")))
 
     router.push(`?${params.toString()}`, { scroll: false })
-  }, [building, campus, day, router, form])
+  }, [])
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -199,44 +252,40 @@ export default function ClassroomSearchForm({
               <FieldError errors={[form.formState.errors.day]} />
             )}
           </FieldSet>
-
-          {/* Time From / To */}
-          {/* TODO:
-                1. remove seconds from the time picker
-                2. fix the styling so it matches the other select components
-            */}
-          <Controller
-            name="timeFrom"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field>
-                <FieldLabel>From</FieldLabel>
-                <SimpleTimePicker
-                  onChange={field.onChange}
-                  value={field.value}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-          <Controller
-            name="timeTo"
-            control={form.control}
-            render={({ field, fieldState }) => (
-              <Field>
-                <FieldLabel>To</FieldLabel>
-                <SimpleTimePicker
-                  onChange={field.onChange}
-                  value={field.value}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
+          <div className="flex flex-col gap-x-4 md:flex-row">
+            <Controller
+              name="timeFrom"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>From</FieldLabel>
+                  <SimpleTimePicker
+                    onChange={field.onChange}
+                    value={field.value}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="timeTo"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>To</FieldLabel>
+                  <SimpleTimePicker
+                    onChange={field.onChange}
+                    value={field.value}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </div>
         </CardContent>
         <CardFooter>
           <Button type="submit" className="ml-auto">
