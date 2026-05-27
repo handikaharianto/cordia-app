@@ -1,7 +1,51 @@
 "use server"
 
 import { supabase } from "@/lib/supabase"
-import { Classroom } from "@/types"
+import { Classroom, GroupedClassroom } from "@/types"
+
+function groupByRoom(
+  classrooms: Classroom[],
+  startTime: string,
+  endTime: string
+): GroupedClassroom[] {
+  const map = new Map<string, GroupedClassroom>()
+
+  for (const classroom of classrooms) {
+    // Only include if the class time is before the next class schedule
+    const isClassroomAvailable =
+      startTime < classroom.class_start_time &&
+      endTime < classroom.class_end_time
+
+    if (!isClassroomAvailable) continue
+
+    const key = `${classroom.building_code}:${classroom.room}`
+
+    const existing = map.get(key)
+    if (existing) {
+      // check if the same start and end times of the next class schedules have been added
+      const alreadyExists = existing.schedules.some(
+        (s) =>
+          s.class_start_time === classroom.class_start_time &&
+          s.class_end_time === classroom.class_end_time
+      )
+      // if it doesn't exist, then add it
+      if (!alreadyExists) {
+        existing.schedules.push({
+          class_start_time: classroom.class_start_time,
+          class_end_time: classroom.class_end_time,
+        })
+      }
+    } else {
+      const { class_start_time, class_end_time, ...rest } = classroom
+      map.set(key, {
+        ...rest,
+        schedules: [{ class_start_time, class_end_time }],
+      })
+    }
+  }
+
+  return Array.from(map.values())
+}
 
 export async function getAvailableClassrooms(params: {
   day: string
@@ -9,7 +53,7 @@ export async function getAvailableClassrooms(params: {
   endTime: string
   location: string
   buildingCode?: string
-}): Promise<{ classrooms: Classroom[]; count: number }> {
+}): Promise<{ classrooms: GroupedClassroom[]; count: number }> {
   const { day, startTime, endTime, location, buildingCode } = params
 
   // Find rooms that are occupied during the specified time on the given day
@@ -44,8 +88,10 @@ export async function getAvailableClassrooms(params: {
 
   const { data, count } = await query
 
+  const classrooms = groupByRoom(data ?? [], startTime, endTime)
+
   return {
-    classrooms: data ?? [],
+    classrooms,
     count: count ?? 0,
   }
 }

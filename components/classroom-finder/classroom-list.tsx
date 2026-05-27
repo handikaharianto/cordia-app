@@ -1,8 +1,8 @@
-import type { Classroom } from "@/types"
+import type { GroupedClassroom } from "@/types"
 import ClassroomItem from "@/components/classroom-finder/classroom-item"
 
 type ClassroomListProps = {
-  classrooms: Classroom[]
+  classrooms: GroupedClassroom[]
   count: number
 }
 

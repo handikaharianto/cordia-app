@@ -66,6 +66,18 @@ export type Classroom = {
   faculty_description: string
 }
 
+export type ClassroomSchedule = {
+  class_start_time: string
+  class_end_time: string
+}
+
+export type GroupedClassroom = Omit<
+  Classroom,
+  "class_start_time" | "class_end_time"
+> & {
+  schedules: ClassroomSchedule[]
+}
+
 export type Building = {
   id: string
   building_code: string

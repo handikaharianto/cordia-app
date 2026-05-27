@@ -2,7 +2,7 @@ import { getAvailableClassrooms } from "@/app/actions/classroom"
 import ClassroomList from "@/components/classroom-finder/classroom-list"
 import ClassroomSearchForm from "@/components/classroom-finder/classroom-search-form"
 import { supabase } from "@/lib/supabase"
-import type { Building, Classroom } from "@/types"
+import type { Building, GroupedClassroom } from "@/types"
 
 /** Map short day names from the form to Supabase column names */
 const DAY_TO_COLUMN: Record<string, string> = {
@@ -32,10 +32,7 @@ async function ClassroomFinderPage({ searchParams }: ClassroomFinderPageProps) {
     .from("buildings")
     .select("*")
 
-  const filteredBuildings =
-    buildings?.filter((building) => building.location_code === campus) ?? []
-
-  let classrooms: Classroom[] = []
+  let classrooms: GroupedClassroom[] = []
   let count = 0
 
   // check if the search params exist
@@ -63,7 +60,7 @@ async function ClassroomFinderPage({ searchParams }: ClassroomFinderPageProps) {
         </p>
       </div>
 
-      <ClassroomSearchForm buildings={filteredBuildings} />
+      <ClassroomSearchForm buildings={buildings ?? []} />
       <ClassroomList classrooms={classrooms} count={count} />
     </div>
   )
