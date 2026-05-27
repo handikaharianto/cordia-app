@@ -14,7 +14,7 @@ function groupByRoom(
     // Only include if the class time is before the next class schedule
     const isClassroomAvailable =
       startTime < classroom.class_start_time &&
-      endTime < classroom.class_end_time
+      endTime < classroom.class_start_time
 
     if (!isClassroomAvailable) continue
 
