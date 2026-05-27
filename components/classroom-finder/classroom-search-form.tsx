@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller, type Resolver } from "react-hook-form"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -81,6 +81,8 @@ type ClassroomSearchFormProps = {
 export default function ClassroomSearchForm({
   buildings,
 }: ClassroomSearchFormProps) {
+  const [availableBuildings, setAvailableBuildings] = useState(buildings)
+
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -123,30 +125,18 @@ export default function ClassroomSearchForm({
   }
 
   const campus = form.watch("campus")
-  // const building = form.watch("building")
-  // const day = form.watch("day")
+  const prevCampus = useRef(campus)
 
-  // Reset building when campus changes
   useEffect(() => {
-    form.setValue("building", "")
-  }, [campus, form])
-
-  // Update URL when form values change
-  useEffect(() => {
-    const params = new URLSearchParams()
-
-    const campusValue = form.getValues("campus")
-    const buildingValue = form.getValues("building")
-    const dayValue = form.getValues("day")
-
-    params.set("campus", campusValue)
-    if (buildingValue) params.set("building", buildingValue ?? "")
-    params.set("day", dayValue)
-    params.set("timeFrom", formatTime(form.getValues("timeFrom")))
-    params.set("timeTo", formatTime(form.getValues("timeTo")))
-
-    router.push(`?${params.toString()}`, { scroll: false })
-  }, [])
+    // update building value and list of buildings when 'campus' has changed
+    if (prevCampus.current !== campus) {
+      form.setValue("building", "")
+      setAvailableBuildings(
+        buildings.filter((building) => building.location_code === campus)
+      )
+    }
+    prevCampus.current = campus
+  }, [campus, form, router, buildings])
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -205,7 +195,7 @@ export default function ClassroomSearchForm({
                     <SelectValue placeholder="Select building (optional)" />
                   </SelectTrigger>
                   <SelectContent className="p-1.5">
-                    {buildings.map((building) => (
+                    {availableBuildings.map((building) => (
                       <SelectItem
                         key={building.building_code}
                         value={building.building_code}
