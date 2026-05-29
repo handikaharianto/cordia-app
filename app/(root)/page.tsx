@@ -52,8 +52,8 @@ async function ClassroomFinderPage({ searchParams }: ClassroomFinderPageProps) {
   }
 
   return (
-    <div>
-      <div className="mb-8 space-y-2">
+    <div className="px-4">
+      <div className="my-8 space-y-2">
         <h2 className="text-4xl font-medium">Classroom Finder</h2>
         <p>
           Locate available rooms across campus for study sessions or meetings.
