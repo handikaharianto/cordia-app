@@ -3,9 +3,23 @@
 import { IconMoon, IconSun } from "@tabler/icons-react"
 import { Switch } from "@/components/ui/switch"
 import { useTheme } from "next-themes"
+import { useSyncExternalStore } from "react"
+
+function useMounted() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+}
 
 export function Header() {
   const { resolvedTheme, setTheme } = useTheme()
+  const mounted = useMounted()
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
