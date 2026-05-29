@@ -1,15 +1,13 @@
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { GroupedClassroom } from "@/types"
-import { IconClock } from "@tabler/icons-react"
+import { IconCircleCheck, IconClock } from "@tabler/icons-react"
 
 type ClassroomItemProps = {
   classroom: GroupedClassroom
@@ -35,7 +33,12 @@ function ClassroomItem({ classroom }: ClassroomItemProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
-        {schedules.length == 0 && <Badge>available all day</Badge>}
+        {schedules.length === 0 && (
+          <Badge className="bg-green-50 p-4 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
+            <IconCircleCheck />
+            Available All Day
+          </Badge>
+        )}
         {schedules.length > 0 && (
           <>
             <div className="flex items-center gap-x-1">
