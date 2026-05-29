@@ -13,7 +13,14 @@ function groupByRoom(classrooms: Classroom[], day: string): GroupedClassroom[] {
 
     const existing = map.get(key)
     if (existing) {
-      if (hasClassOnDay) {
+      // check for duplicates in the start and end time
+      const alreadyExists = existing.schedules.some(
+        (s) =>
+          s.class_start_time === classroom.class_start_time &&
+          s.class_end_time === classroom.class_end_time
+      )
+
+      if (!alreadyExists && hasClassOnDay) {
         existing.schedules.push({
           class_start_time: classroom.class_start_time,
           class_end_time: classroom.class_end_time,
