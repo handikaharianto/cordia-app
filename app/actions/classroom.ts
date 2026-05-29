@@ -3,33 +3,17 @@
 import { supabase } from "@/lib/supabase"
 import { Classroom, GroupedClassroom } from "@/types"
 
-function groupByRoom(
-  classrooms: Classroom[],
-  startTime: string,
-  endTime: string
-): GroupedClassroom[] {
+function groupByRoom(classrooms: Classroom[], day: string): GroupedClassroom[] {
   const map = new Map<string, GroupedClassroom>()
 
   for (const classroom of classrooms) {
-    // Only include if the class time is before the next class schedule
-    const isClassroomAvailable =
-      startTime < classroom.class_start_time &&
-      endTime < classroom.class_start_time
-
-    if (!isClassroomAvailable) continue
-
     const key = `${classroom.building_code}:${classroom.room}`
+
+    const hasClassOnDay = classroom[day as keyof Classroom]
 
     const existing = map.get(key)
     if (existing) {
-      // check if the same start and end times of the next class schedules have been added
-      const alreadyExists = existing.schedules.some(
-        (s) =>
-          s.class_start_time === classroom.class_start_time &&
-          s.class_end_time === classroom.class_end_time
-      )
-      // if it doesn't exist, then add it
-      if (!alreadyExists) {
+      if (hasClassOnDay) {
         existing.schedules.push({
           class_start_time: classroom.class_start_time,
           class_end_time: classroom.class_end_time,
@@ -39,7 +23,7 @@ function groupByRoom(
       const { class_start_time, class_end_time, ...rest } = classroom
       map.set(key, {
         ...rest,
-        schedules: [{ class_start_time, class_end_time }],
+        schedules: hasClassOnDay ? [{ class_start_time, class_end_time }] : [],
       })
     }
   }
@@ -56,39 +40,24 @@ export async function getAvailableClassrooms(params: {
 }): Promise<{ classrooms: GroupedClassroom[]; count: number }> {
   const { day, startTime, endTime, location, buildingCode } = params
 
-  // Find rooms that are occupied during the specified time on the given day
-  let occupiedQuery = supabase
-    .from("classrooms")
-    .select("room_code")
-    .eq(day, "Y")
-    .eq("location_code", location)
-    .lt("class_start_time", endTime)
-    .gt("class_end_time", startTime)
-
-  if (buildingCode) {
-    occupiedQuery = occupiedQuery.eq("building_code", buildingCode)
-  }
-
-  const { data: occupiedRooms } = await occupiedQuery
-
-  // Get all classrooms at the location, excluding occupied ones
-  let query = supabase
+  let availableClassroomsQuery = supabase
     .from("classrooms")
     .select("*", { count: "exact" })
     .eq("location_code", location)
+    .or(
+      `${day}.eq.false,and(${day}.eq.true,class_start_time.gt.${startTime},class_start_time.gt.${endTime})`
+    )
 
   if (buildingCode) {
-    query = query.eq("building_code", buildingCode)
+    availableClassroomsQuery = availableClassroomsQuery.eq(
+      "building_code",
+      buildingCode
+    )
   }
 
-  if (occupiedRooms && occupiedRooms.length > 0) {
-    const occupiedRoomCodes = occupiedRooms.map((room) => room.room_code)
-    query = query.not("room_code", "in", `(${occupiedRoomCodes.join(",")})`)
-  }
+  const { data: availableClassrooms, count } = await availableClassroomsQuery
 
-  const { data, count } = await query
-
-  const classrooms = groupByRoom(data ?? [], startTime, endTime)
+  const classrooms = groupByRoom(availableClassrooms ?? [], day)
 
   return {
     classrooms,
