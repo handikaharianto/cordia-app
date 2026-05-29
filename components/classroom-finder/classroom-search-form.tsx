@@ -86,14 +86,14 @@ export default function ClassroomSearchForm({
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const paramCampus = searchParams.get("campus")
+  const paramBuilding = searchParams.get("building")
+  const paramDay = searchParams.get("day") as FormValues["day"] | null
+  const paramTimeFrom = searchParams.get("timeFrom")
+  const paramTimeTo = searchParams.get("timeTo")
+
   const defaultValues = useMemo<FormValues>(() => {
     const now = new Date()
-
-    const paramDay = searchParams.get("day") as FormValues["day"] | null
-    const paramCampus = searchParams.get("campus")
-    const paramBuilding = searchParams.get("building")
-    const paramTimeFrom = searchParams.get("timeFrom")
-    const paramTimeTo = searchParams.get("timeTo")
 
     const parsedTimeFrom = paramTimeFrom ? parseTime(paramTimeFrom) : null
     const parsedTimeTo = paramTimeTo ? parseTime(paramTimeTo) : null
@@ -137,6 +137,20 @@ export default function ClassroomSearchForm({
     }
     prevCampus.current = campus
   }, [campus, form, router, buildings])
+
+  useEffect(() => {
+    if (!paramCampus || !paramDay || !paramTimeFrom || !paramTimeTo) {
+      const params = new URLSearchParams()
+      params.set("campus", defaultValues.campus)
+      params.set("day", defaultValues.day)
+      params.set("timeFrom", formatTime(defaultValues.timeFrom))
+      params.set("timeTo", formatTime(defaultValues.timeTo))
+      router.replace(`?${params.toString()}`, { scroll: false })
+    }
+    setAvailableBuildings(
+      buildings.filter((building) => building.location_code === campus)
+    )
+  }, []) // runs only once on mount
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
