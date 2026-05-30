@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getAvailableClassrooms } from "@/app/actions/classroom"
 import ClassroomList from "@/components/classroom-finder/classroom-list"
 import ClassroomSearchForm from "@/components/classroom-finder/classroom-search-form"
@@ -23,6 +24,37 @@ type ClassroomFinderPageProps = {
     timeFrom?: string
     timeTo?: string
   }>
+}
+
+export async function generateMetadata({
+  searchParams,
+}: ClassroomFinderPageProps): Promise<Metadata> {
+  const { campus, building, day, timeFrom, timeTo } = await searchParams
+
+  // Build a dynamic description based on search params
+  const searchParts: string[] = []
+  if (campus === "SGW") searchParts.push("Sir George Williams Campus")
+  else if (campus === "LOY") searchParts.push("Loyola Campus")
+  if (building) searchParts.push(`Building ${building}`)
+  if (day) searchParts.push(day)
+  if (timeFrom && timeTo) searchParts.push(`${timeFrom} - ${timeTo}`)
+
+  const description = searchParts.length
+    ? `Available classrooms at ${searchParts.join(", ")}`
+    : "Find available classrooms and study rooms at Concordia University. Search by campus, building, day, and time."
+
+  const title = searchParts.length
+    ? `Classrooms at ${searchParts.join(", ")}`
+    : "Classroom Finder"
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+  }
 }
 
 async function ClassroomFinderPage({ searchParams }: ClassroomFinderPageProps) {
