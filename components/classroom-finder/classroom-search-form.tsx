@@ -26,6 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { IconSearch } from "@tabler/icons-react"
 import { SimpleTimePicker } from "@/components/simple-time-picker"
 import { Building } from "@/types"
+import { getMinTime, getMaxTime } from "@/lib/utils"
 
 function formatTime(date: Date): string {
   return date.toTimeString().slice(0, 5) // e.g. "14:30"
@@ -125,6 +126,8 @@ export default function ClassroomSearchForm({
   }
 
   const campus = form.watch("campus")
+  const watchedTimeFrom = form.watch("timeFrom")
+  const watchedTimeTo = form.watch("timeTo")
   const prevCampus = useRef(campus)
 
   useEffect(() => {
@@ -266,6 +269,7 @@ export default function ClassroomSearchForm({
                   <SimpleTimePicker
                     onChange={field.onChange}
                     value={field.value}
+                    max={getMaxTime(watchedTimeTo)}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -282,6 +286,7 @@ export default function ClassroomSearchForm({
                   <SimpleTimePicker
                     onChange={field.onChange}
                     value={field.value}
+                    min={getMinTime(watchedTimeFrom)}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />

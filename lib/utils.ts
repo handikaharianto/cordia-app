@@ -15,3 +15,15 @@ export const formatDate = (date: string): string => {
   const [day, month, year] = date.split("/")
   return `${year}-${month}-${day}`
 }
+
+export const getMinTime = (startTime: Date): Date => {
+  const result = new Date(startTime)
+  result.setMinutes(result.getMinutes() + 1)
+  return result
+}
+
+export const getMaxTime = (startTime: Date): Date => {
+  const result = new Date(startTime)
+  result.setMinutes(result.getMinutes() - 1)
+  return result
+}
