@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server"
 import { parse } from "csv-parse/sync"
-import fs from "fs"
 import { parseDate } from "@/lib/date"
 import { formatDate, formatTime } from "@/lib/utils"
 import { Classroom, CourseSchedule } from "@/types"
 import { supabase } from "@/lib/supabase"
 
 const BATCH_SIZE = 1000
+
+const cleanDatabase = async () => {
+  await supabase
+    .from("classrooms")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000")
+  await supabase
+    .from("buildings")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000")
+}
 
 const seedClassroomData = async (data: Classroom[]) => {
   const { error } = await supabase.from("classrooms").insert(data)
@@ -27,23 +37,25 @@ const seedBuildingCodeData = async (data: Classroom[]) => {
     ).values(),
   ]
 
-  const { error } = await supabase.from("buildings").insert(buildingCodes)
+  const { error } = await supabase.from("buildings").upsert(buildingCodes, {
+    onConflict: "building_code",
+    ignoreDuplicates: true,
+  })
   if (error) throw error
 }
 
 export async function GET() {
-  // const URL =
-  //   "https://opendata.concordia.ca/datasets/sis/CU_SR_OPEN_DATA_SCHED.csv"
+  /**
+   * clean up database
+   */
+  await cleanDatabase()
 
-  // const response = await fetch(URL)
-  // const buffer = await response.arrayBuffer()
-  // const csvText = new TextDecoder("utf-16le").decode(buffer)
+  const URL =
+    "https://opendata.concordia.ca/datasets/sis/CU_SR_OPEN_DATA_SCHED.csv"
 
-  // TODO: parse from CSV file
-  const PATH = "/Users/handikaharianto/Downloads/CU_SR_OPEN_DATA_SCHED.csv"
-
-  const csvText = fs.readFileSync(PATH, "utf-16le")
-  // TODO: REPLACE THE ABOVE CODE
+  const response = await fetch(URL)
+  const buffer = await response.arrayBuffer()
+  const csvText = new TextDecoder("utf-16le").decode(buffer)
 
   const records = parse(csvText, {
     columns: true,
@@ -55,15 +67,18 @@ export async function GET() {
   const classrooms = records
     .filter((row) => {
       const buildingCode = row["Building Code"] as string
+      const room = row["Room"] as string
 
       const startDate = parseDate(row["Start Date (DD/MM/YYYY)"])
       const endDate = parseDate(row["End Date (DD/MM/YYYY)"])
       const currentDate = new Date()
+      currentDate.setHours(0, 0, 0, 0)
 
       const hasBuildingCode = buildingCode !== ""
-      const isWithinRange = currentDate >= startDate && currentDate <= endDate
+      const hasRoom = !room.toLowerCase().includes("tba")
+      const isWithinRange = startDate <= currentDate && currentDate <= endDate
 
-      return isWithinRange && hasBuildingCode
+      return isWithinRange && hasBuildingCode && hasRoom
     })
     .map((row) => {
       return {
