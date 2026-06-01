@@ -44,7 +44,13 @@ const seedBuildingCodeData = async (data: Classroom[]) => {
   if (error) throw error
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // check cron secret
+  const authHeader = request.headers.get("Authorization")
+  if (authHeader !== `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   /**
    * clean up database
    */
