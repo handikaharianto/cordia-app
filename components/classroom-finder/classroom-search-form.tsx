@@ -158,7 +158,7 @@ export default function ClassroomSearchForm({
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <Card>
-        <CardContent className="gap-4 lg:flex">
+        <CardContent className="flex flex-col gap-4 lg:flex-row">
           {/* Campus */}
           <Controller
             name="campus"
@@ -173,12 +173,20 @@ export default function ClassroomSearchForm({
                     if (!open) field.onBlur()
                   }}
                 >
-                  <SelectTrigger id="campus" aria-invalid={fieldState.invalid}>
+                  <SelectTrigger
+                    id="campus"
+                    aria-invalid={fieldState.invalid}
+                    className="cursor-pointer"
+                  >
                     <SelectValue placeholder="Select campus" />
                   </SelectTrigger>
                   <SelectContent className="p-1.5">
                     {CAMPUS_OPTIONS.map((campus) => (
-                      <SelectItem key={campus.value} value={campus.value}>
+                      <SelectItem
+                        key={campus.value}
+                        value={campus.value}
+                        className="cursor-pointer"
+                      >
                         {campus.label}
                       </SelectItem>
                     ))}
@@ -208,6 +216,7 @@ export default function ClassroomSearchForm({
                   <SelectTrigger
                     id="building"
                     aria-invalid={fieldState.invalid}
+                    className="cursor-pointer"
                   >
                     <SelectValue placeholder="Select building (optional)" />
                   </SelectTrigger>
@@ -216,6 +225,7 @@ export default function ClassroomSearchForm({
                       <SelectItem
                         key={building.building_code}
                         value={building.building_code}
+                        className="cursor-pointer"
                       >
                         {building.building_code}
                       </SelectItem>
@@ -248,7 +258,12 @@ export default function ClassroomSearchForm({
                   className="justify-start"
                 >
                   {DAYS.map((day) => (
-                    <ToggleGroupItem key={day} value={day} aria-label={day}>
+                    <ToggleGroupItem
+                      key={day}
+                      value={day}
+                      aria-label={day}
+                      className="cursor-pointer"
+                    >
                       {day}
                     </ToggleGroupItem>
                   ))}
@@ -259,7 +274,7 @@ export default function ClassroomSearchForm({
               <FieldError errors={[form.formState.errors.day]} />
             )}
           </FieldSet>
-          <div className="flex flex-col gap-x-4 md:flex-row">
+          <div className="flex flex-col gap-4 md:flex-row">
             <Controller
               name="timeFrom"
               control={form.control}
